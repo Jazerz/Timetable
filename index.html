@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดตารางเรียน</title>
+    <!-- นำเข้าไลบรารีสำหรับแปลงหน้าเว็บเป็น PNG และ PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --border-color: #e9ecef;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --primary: #2b304c;
+        }
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header-container h1 {
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .action-buttons button {
+            font-family: 'Kanit', sans-serif;
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-add { background-color: var(--primary); color: white; }
+        .btn-export { background-color: white; color: var(--primary); border: 1px solid var(--primary) !important; }
+        .btn-export:hover, .btn-add:hover { opacity: 0.8; }
+
+        /* Timetable Grid */
+        .timetable-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+        .timetable {
+            display: grid;
+            grid-template-columns: 100px repeat(10, 1fr);
+            grid-template-rows: 50px repeat(5, 100px);
+            border-top: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+            min-width: 900px;
+            position: relative;
+        }
+
+        .cell {
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .header-cell {
+            background-color: #fbfbfb;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Subject Blocks */
+        .subject-block {
+            position: absolute;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 12px;
+            cursor: grab; /* เปลี่ยน Cursor เพื่อให้รู้ว่าลากได้ */
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: box-shadow 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+            margin: 2px;
+        }
+
+        .subject-block:active {
+            cursor: grabbing;
+        }
+
+        .subject-block:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .subj-code { font-weight: 700; margin-bottom: 2px; }
+        
+        .subj-details { 
+            color: rgba(0,0,0,0.6); 
+            font-size: 11px; 
+            line-height: 1.4;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Kanit', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-circle {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            opacity: 0.6;
+        }
+
+        .color-circle.selected {
+            border-color: var(--text-dark);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* ปุ่มใน Modal */
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 600;
+        }
+
+        .btn-save { background-color: var(--primary); color: white; }
+        .btn-delete { background-color: #fff; color: #e53e3e; border: 1px solid #e53e3e; }
+        .btn-duplicate { background-color: #fff; color: #3182ce; border: 1px solid #3182ce; }
+
+        .row-2 { display: flex; gap: 15px; }
+        .row-2 .form-group { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>จัดตารางเรียน</h1>
+        <div class="action-buttons">
+            <button class="btn-add" onclick="openModal()">+ เพิ่มรายวิชา</button>
+            <button class="btn-export" onclick="exportImage()">บันทึกเป็น PNG</button>
+            <button class="btn-export" onclick="exportPDF()">บันทึกเป็น PDF</button>
+        </div>
+    </div>
+
+    <div class="timetable-wrapper" id="capture-area">
+        <div class="timetable" id="timetable">
+            <!-- Headers -->
+            <div class="cell header-cell">Day / Time</div>
+            <div class="cell header-cell">08.00 - 09.00</div>
+            <div class="cell header-cell">09.00 - 10.00</div>
+            <div class="cell header-cell">10.00 - 11.00</div>
+            <div class="cell header-cell">11.00 - 12.00</div>
+            <div class="cell header-cell">12.00 - 13.00</div>
+            <div class="cell header-cell">13.00 - 14.00</div>
+            <div class="cell header-cell">14.00 - 15.00</div>
+            <div class="cell header-cell">15.00 - 16.00</div>
+            <div class="cell header-cell">16.00 - 17.00</div>
+            <div class="cell header-cell">17.00 - 18.00</div>
+
+            <!-- Day Rows -->
+            <div class="cell header-cell">MON</div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            
+            <div class="cell header-cell">TUE</div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            
+            <div class="cell header-cell">WED</div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            
+            <div class="cell header-cell">THU</div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            
+            <div class="cell header-cell">FRI</div>
+            <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        </div>
+    </div>
+
+    <!-- Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">เพิ่มรายวิชา</h2>
+            
+            <input type="hidden" id="editId">
+            
+            <div class="row-2">
+                <div class="form-group">
+                    <label>รหัสวิชา</label>
+                    <input type="text" id="courseCode" placeholder="เช่น 2303108" required>
+                </div>
+                <div class="form-group">
+                    <label>ชื่อวิชา</label>
+                    <input type="text" id="courseName" placeholder="เช่น GEN BIOL LAB" required>
+                </div>
+            </div>
+
+            <div class="row-2">
+                <div class="form-group">
+                    <label>Section</label>
+                    <input type="text" id="sec" placeholder="เช่น 1 หรือ 166">
+                </div>
+                <div class="form-group">
+                    <label>ผู้สอน</label>
+                    <input type="text" id="instructor" placeholder="เช่น STAFF">
+                </div>
+            </div>
+
+            <div class="row-2">
+                <div class="form-group">
+                    <label>วัน</label>
+                    <select id="day">
+                        <option value="MON">จันทร์ (MON)</option>
+                        <option value="TUE">อังคาร (TUE)</option>
+                        <option value="WED">พุธ (WED)</option>
+                        <option value="THU">พฤหัสบดี (THU)</option>
+                        <option value="FRI">ศุกร์ (FRI)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>เวลา (เช่น 09:00 - 12:00)</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="time" id="startTime" required> 
+                        <span style="align-self:center;">-</span> 
+                        <input type="time" id="endTime" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row-2">
+                <div class="form-group">
+                    <label>ห้องเรียน</label>
+                    <input type="text" id="room" placeholder="เช่น MHMK 401">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>เลือกสีในตาราง</label>
+                <div class="color-picker" id="colorPicker">
+                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div>
+                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div>
+                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div>
+                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div>
+                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div>
+                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div>
+                </div>
+                <input type="hidden" id="selectedColor" value="#a7f3d0">
+            </div>
+
+            <!-- เพิ่มปุ่มทำสำเนาที่นี่ -->
+            <div class="modal-actions">
+                <button class="btn-delete" id="deleteBtn" style="display:none;" onclick="deleteCourse()">ลบ</button>
+                <button class="btn-duplicate" id="duplicateBtn" style="display:none;" onclick="duplicateCourse()">ทำสำเนา</button>
+                <button class="btn-save" onclick="saveCourse()" id="saveBtnFull">บันทึกวิชา</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ฐานข้อมูล
+        let courses = [
+            {
+                id: 1, code: "2303108", name: "GEN BIOL LAB", sec: "3", instructor: "STAFF",
+                day: "TUE", start: "09:00", end: "12:00", room: "MHMK 401", midterm: "", final: "", color: "#a7f3d0"
+            },
+            {
+                id: 2, code: "2301173", name: "PROGRAMMING", sec: "1", instructor: "STAFF",
+                day: "THU", start: "09:00", end: "12:00", room: "SCI05 402", midterm: "", final: "", color: "#bfdbfe"
+            }
+        ];
+
+        const dayMap = { "MON": 2, "TUE": 3, "WED": 4, "THU": 5, "FRI": 6 };
+        const daysList = ["MON", "TUE", "WED", "THU", "FRI"];
+        const timetableEl = document.getElementById('timetable');
+
+        function renderTimetable() {
+            document.querySelectorAll('.subject-block').forEach(el => el.remove());
+
+            courses.forEach(course => {
+                const startHour = parseInt(course.start.split(':')[0]);
+                const startMin = parseInt(course.start.split(':')[1]) / 60;
+                const endHour = parseInt(course.end.split(':')[0]);
+                const endMin = parseInt(course.end.split(':')[1]) / 60;
+
+                const colStart = (startHour - 8) + 2 + startMin;
+                const colEnd = (endHour - 8) + 2 + endMin;
+                const row = dayMap[course.day];
+
+                const block = document.createElement('div');
+                block.className = 'subject-block';
+                block.style.backgroundColor = course.color;
+                
+                block.style.gridColumn = `${colStart} / ${colEnd}`;
+                block.style.gridRow = `${row} / ${row + 1}`;
+                
+                block.style.top = "2px"; block.style.bottom = "2px"; block.style.left = "2px"; block.style.right = "2px";
+
+                // จัด Sec ให้อยู่บรรทัดล่างด้วย <br>
+                block.innerHTML = `
+                    <div class="subj-code">${course.code} ${course.name.substring(0,12)}${course.name.length>12?'...':''}</div>
+                    <div class="subj-details">${course.room}<br>Sec ${course.sec}</div>
+                `;
+
+                // ให้ลากย้ายได้
+                block.draggable = true;
+                
+                // Event เมื่อเริ่มลาก
+                block.ondragstart = (e) => {
+                    e.dataTransfer.setData("text/plain", course.id);
+                    setTimeout(() => block.style.opacity = '0.5', 0); // ทำโปร่งใสขณะลาก
+                };
+
+                // Event เมื่อปล่อยเมาส์
+                block.ondragend = () => {
+                    block.style.opacity = '1';
+                };
+
+                // การคลิกเพื่อดูและแก้ไข (หยุดไม่ให้ทำงานตอนเรากำลังลาก)
+                block.onclick = (e) => {
+                    openModal(course.id);
+                };
+
+                timetableEl.appendChild(block);
+            });
+        }
+
+        // --- ระบบ Drag & Drop สำหรับ Container ---
+        timetableEl.ondragover = (e) => {
+            e.preventDefault(); // จำเป็นต้องมีเพื่อให้ Drop ได้
+        };
+
+        timetableEl.ondrop = (e) => {
+            e.preventDefault();
+            const id = e.dataTransfer.getData("text/plain");
+            if(!id) return;
+            
+            // หาตำแหน่งพิกัดเมาส์เทียบกับตัวตาราง
+            const rect = timetableEl.getBoundingClientRect();
+            const x = e.clientX - rect.left - 100; // หักลบความกว้างคอลัมน์แรก (เวลา)
+            const y = e.clientY - rect.top - 50;   // หักลบความสูงแถวแรก (วัน)
+            
+            if (x < 0 || y < 0) return; // หากปล่อยเมาส์ในโซนหัวตารางให้ข้ามไป
+
+            // คำนวณความกว้างของ 1 คอลัมน์ (เวลา 1 ชม.)
+            const colWidth = (rect.width - 100) / 10;
+            const rowHeight = 100; // แถวสูง 100px เสมอตาม CSS
+
+            // หาคอลัมน์ (0-9) และแถว (0-4) ที่ถูกปล่อย
+            const colIndex = Math.floor(x / colWidth);
+            const rowIndex = Math.floor(y / rowHeight);
+
+            if (colIndex >= 0 && colIndex < 10 && rowIndex >= 0 && rowIndex < 5) {
+                const newDay = daysList[rowIndex];
+                
+                const courseIndex = courses.findIndex(c => c.id === parseInt(id));
+                if(courseIndex !== -1) {
+                    const course = courses[courseIndex];
+                    
+                    // คำนวณระยะเวลาเรียนเดิม
+                    const startH = parseInt(course.start.split(':')[0]);
+                    const startM = parseInt(course.start.split(':')[1]);
+                    const endH = parseInt(course.end.split(':')[0]);
+                    const endM = parseInt(course.end.split(':')[1]);
+                    const durationH = endH - startH;
+                    const durationM = endM - startM;
+                    
+                    // เวลาเริ่มใหม่ (col 0 = 08:00)
+                    const newStartH = 8 + colIndex;
+                    
+                    // คำนวณเวลาสิ้นสุดใหม่
+                    let newEndH = newStartH + durationH;
+                    let newEndM = startM + durationM;
+                    if(newEndM >= 60) {
+                        newEndH += Math.floor(newEndM / 60);
+                        newEndM = newEndM % 60;
+                    } else if (newEndM < 0) {
+                        newEndH -= 1;
+                        newEndM = 60 + newEndM;
+                    }
+                    
+                    // จัดรูปแบบกลับเป็น HH:MM
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    course.day = newDay;
+                    course.start = `${pad(newStartH)}:${pad(startM)}`;
+                    course.end = `${pad(newEndH)}:${pad(newEndM)}`;
+                    
+                    renderTimetable();
+                }
+            }
+        };
+
+        // --- ระบบ Modal ---
+        const modal = document.getElementById('courseModal');
+        const colorCircles = document.querySelectorAll('.color-circle');
+
+        colorCircles.forEach(circle => {
+            circle.addEventListener('click', function() {
+                colorCircles.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('selectedColor').value = this.getAttribute('data-color');
+            });
+        });
+
+        function openModal(id = null) {
+            modal.style.display = 'flex';
+            const deleteBtn = document.getElementById('deleteBtn');
+            const duplicateBtn = document.getElementById('duplicateBtn');
+
+            if (id) {
+                const course = courses.find(c => c.id === id);
+                document.getElementById('modalTitle').innerText = course.code + " " + course.name;
+                document.getElementById('editId').value = course.id;
+                document.getElementById('courseCode').value = course.code;
+                document.getElementById('courseName').value = course.name;
+                document.getElementById('sec').value = course.sec;
+                document.getElementById('instructor').value = course.instructor;
+                document.getElementById('day').value = course.day;
+                document.getElementById('startTime').value = course.start;
+                document.getElementById('endTime').value = course.end;
+                document.getElementById('room').value = course.room;
+                
+                document.getElementById('selectedColor').value = course.color;
+                colorCircles.forEach(c => {
+                    c.classList.remove('selected');
+                    if(c.getAttribute('data-color') === course.color) c.classList.add('selected');
+                });
+
+                // เปิดปุ่มลบและปุ่มทำสำเนา
+                deleteBtn.style.display = 'block';
+                duplicateBtn.style.display = 'block';
+            } else {
+                document.getElementById('modalTitle').innerText = 'เพิ่มรายวิชา';
+                document.getElementById('editId').value = '';
+                document.getElementById('courseCode').value = '';
+                document.getElementById('courseName').value = '';
+                document.getElementById('sec').value = '';
+                document.getElementById('instructor').value = '';
+                document.getElementById('room').value = '';
+                
+                // ซ่อนปุ่มเมื่อเป็นการเพิ่มใหม่
+                deleteBtn.style.display = 'none';
+                duplicateBtn.style.display = 'none';
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function saveCourse() {
+            const id = document.getElementById('editId').value;
+            const newCourse = {
+                id: id ? parseInt(id) : Date.now(),
+                code: document.getElementById('courseCode').value,
+                name: document.getElementById('courseName').value,
+                sec: document.getElementById('sec').value,
+                instructor: document.getElementById('instructor').value,
+                day: document.getElementById('day').value,
+                start: document.getElementById('startTime').value,
+                end: document.getElementById('endTime').value,
+                room: document.getElementById('room').value,
+                color: document.getElementById('selectedColor').value
+            };
+
+            if(!newCourse.code || !newCourse.start || !newCourse.end) {
+                alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+                return;
+            }
+
+            if (id) {
+                courses = courses.map(c => c.id === parseInt(id) ? newCourse : c);
+            } else {
+                courses.push(newCourse);
+            }
+
+            closeModal();
+            renderTimetable();
+        }
+
+        function deleteCourse() {
+            const id = document.getElementById('editId').value;
+            if(id && confirm('คุณต้องการลบรายวิชานี้ออกจากตารางใช่หรือไม่?')) {
+                courses = courses.filter(c => c.id !== parseInt(id));
+                closeModal();
+                renderTimetable();
+            }
+        }
+
+        // ฟังก์ชันทำสำเนา
+        function duplicateCourse() {
+            const id = document.getElementById('editId').value;
+            if(!id) return;
+            
+            const originalCourse = courses.find(c => c.id === parseInt(id));
+            if(originalCourse) {
+                // คัดลอกข้อมูลทั้งหมดแต่เปลี่ยน ID ให้เป็นอันใหม่
+                const copiedCourse = { ...originalCourse, id: Date.now() };
+                courses.push(copiedCourse);
+                closeModal();
+                renderTimetable();
+            }
+        }
+
+        // --- ระบบดาวน์โหลด ---
+        function exportImage() {
+            const captureArea = document.getElementById('capture-area');
+            html2canvas(captureArea, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'timetable.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function exportPDF() {
+            const captureArea = document.getElementById('capture-area');
+            html2canvas(captureArea, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('landscape', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+                pdf.save("timetable.pdf");
+            });
+        }
+
+        renderTimetable();
+    </script>
+</body>
+</html>
