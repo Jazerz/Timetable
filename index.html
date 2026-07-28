@@ -333,11 +333,35 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>เวลา (เช่น 09:00 - 12:00)</label>
-                    <div style="display:flex; gap:5px;">
-                        <input type="time" id="startTime" required> 
-                        <span style="align-self:center;">-</span> 
-                        <input type="time" id="endTime" required>
+                    <label>เวลาเรียน</label>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <!-- เวลาเริ่ม -->
+                        <select id="startHour" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <option value="08">08</option><option value="09">09</option><option value="10">10</option>
+                            <option value="11">11</option><option value="12">12</option><option value="13">13</option>
+                            <option value="14">14</option><option value="15">15</option><option value="16">16</option>
+                            <option value="17">17</option><option value="18">18</option>
+                        </select>
+                        <span>:</span>
+                        <select id="startMin" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <option value="00">00</option><option value="15">15</option>
+                            <option value="30">30</option><option value="45">45</option>
+                        </select>
+                        
+                        <span style="margin: 0 5px;">-</span>
+                        
+                        <!-- เวลาจบ -->
+                        <select id="endHour" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <option value="08">08</option><option value="09">09</option><option value="10">10</option>
+                            <option value="11">11</option><option value="12">12</option><option value="13">13</option>
+                            <option value="14">14</option><option value="15">15</option><option value="16">16</option>
+                            <option value="17">17</option><option value="18">18</option>
+                        </select>
+                        <span>:</span>
+                        <select id="endMin" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <option value="00">00</option><option value="15">15</option>
+                            <option value="30">30</option><option value="45">45</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -521,8 +545,17 @@
                 document.getElementById('sec').value = course.sec;
                 document.getElementById('instructor').value = course.instructor;
                 document.getElementById('day').value = course.day;
-                document.getElementById('startTime').value = course.start;
-                document.getElementById('endTime').value = course.end;
+                
+                // --- จุดที่แก้ไข: แยกเวลาเริ่ม (HH และ MM) ออกจาก course.start ---
+                const sTime = course.start.split(':');
+                document.getElementById('startHour').value = sTime[0];
+                document.getElementById('startMin').value = sTime[1];
+
+                // --- จุดที่แก้ไข: แยกเวลาสิ้นสุด (HH และ MM) ออกจาก course.end ---
+                const eTime = course.end.split(':');
+                document.getElementById('endHour').value = eTime[0];
+                document.getElementById('endMin').value = eTime[1];
+                
                 document.getElementById('room').value = course.room;
                 
                 document.getElementById('selectedColor').value = course.color;
@@ -541,6 +574,13 @@
                 document.getElementById('courseName').value = '';
                 document.getElementById('sec').value = '';
                 document.getElementById('instructor').value = '';
+                
+                // --- จุดที่แก้ไข: กำหนดค่าเริ่มต้นเวลาเมื่อกดเพิ่มวิชาใหม่ ---
+                document.getElementById('startHour').value = '08';
+                document.getElementById('startMin').value = '00';
+                document.getElementById('endHour').value = '09';
+                document.getElementById('endMin').value = '00';
+                
                 document.getElementById('room').value = '';
                 
                 // ซ่อนปุ่มเมื่อเป็นการเพิ่มใหม่
@@ -562,8 +602,8 @@
                 sec: document.getElementById('sec').value,
                 instructor: document.getElementById('instructor').value,
                 day: document.getElementById('day').value,
-                start: document.getElementById('startTime').value,
-                end: document.getElementById('endTime').value,
+                start: document.getElementById('startHour').value + ":" + document.getElementById('startMin').value,
+                end: document.getElementById('endHour').value + ":" + document.getElementById('endMin').value,
                 room: document.getElementById('room').value,
                 color: document.getElementById('selectedColor').value
             };
