@@ -290,6 +290,60 @@
         .btn-logout-main:hover {
             background-color: #fee2e2;
         }
+                /* การจัดวางกล่องวัน/เวลาเรียน (Slot) */
+        .slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .slot-item {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .btn-remove-slot {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+        }
+
+        .btn-add-slot {
+            width: 100%;
+            padding: 10px;
+            background-color: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            color: var(--primary);
+            font-family: 'Kanit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .btn-add-slot:hover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -373,7 +427,7 @@
         </div>
     </div>
 
-    <!-- Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
+        <!-- Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
     <div id="courseModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -384,18 +438,18 @@
             <div class="row-2">
                 <div class="form-group">
                     <label>รหัสวิชา</label>
-                    <input type="text" id="courseCode" placeholder="เช่น 2303108" required>
+                    <input type="text" id="courseCode" placeholder="เช่น 2303107" required>
                 </div>
                 <div class="form-group">
                     <label>ชื่อวิชา</label>
-                    <input type="text" id="courseName" placeholder="เช่น GEN BIOL LAB" required>
+                    <input type="text" id="courseName" placeholder="เช่น GEN BIOLOGY" required>
                 </div>
             </div>
 
             <div class="row-2">
                 <div class="form-group">
                     <label>Section</label>
-                    <input type="text" id="sec" placeholder="เช่น 1 หรือ 166">
+                    <input type="text" id="sec" placeholder="เช่น 2">
                 </div>
                 <div class="form-group">
                     <label>ผู้สอน</label>
@@ -403,81 +457,34 @@
                 </div>
             </div>
 
-            <div class="row-2">
-                <div class="form-group">
-                    <label>วัน</label>
-                    <select id="day">
-                        <option value="MON">จันทร์ (MON)</option>
-                        <option value="TUE">อังคาร (TUE)</option>
-                        <option value="WED">พุธ (WED)</option>
-                        <option value="THU">พฤหัสบดี (THU)</option>
-                        <option value="FRI">ศุกร์ (FRI)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>เวลาเรียน</label>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                        <!-- เวลาเริ่ม -->
-                        <select id="startHour" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
-                            <option value="08">08</option><option value="09">09</option><option value="10">10</option>
-                            <option value="11">11</option><option value="12">12</option><option value="13">13</option>
-                            <option value="14">14</option><option value="15">15</option><option value="16">16</option>
-                            <option value="17">17</option><option value="18">18</option>
-                        </select>
-                        <span>:</span>
-                        <select id="startMin" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
-                            <option value="00">00</option><option value="15">15</option>
-                            <option value="30">30</option><option value="45">45</option>
-                        </select>
-                        
-                        <span style="margin: 0 5px;">-</span>
-                        
-                        <!-- เวลาจบ -->
-                        <select id="endHour" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
-                            <option value="08">08</option><option value="09">09</option><option value="10">10</option>
-                            <option value="11">11</option><option value="12">12</option><option value="13">13</option>
-                            <option value="14">14</option><option value="15">15</option><option value="16">16</option>
-                            <option value="17">17</option><option value="18">18</option>
-                        </select>
-                        <span>:</span>
-                        <select id="endMin" style="padding: 10px; border-radius: 8px; border: 1px solid #e9ecef;">
-                            <option value="00">00</option><option value="15">15</option>
-                            <option value="30">30</option><option value="45">45</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- รายการวัน/เวลา/ห้องเรียน (Dynamic Slots) -->
+            <label style="font-weight:600; font-size:14px; color:var(--text-light); margin-bottom:6px; display:block;">วัน เวลา และห้องเรียน</label>
+            <div id="slotsContainer" class="slots-container">
+                <!-- รายการวันเรียนจะถูกสร้างผ่าน JavaScript บริเวณนี้ -->
             </div>
 
-            <div class="row-2">
-                <div class="form-group">
-                    <label>ห้องเรียน</label>
-                    <input type="text" id="room" placeholder="เช่น MHMK 401">
-                </div>
-            </div>
+            <!-- ปุ่มสำหรับเพิ่มวันเรียนใหม่ -->
+            <button type="button" class="btn-add-slot" onclick="addSlotRow()">+ เพิ่มวัน/เวลาเรียน</button>
 
             <div class="form-group">
                 <label>เลือกสีในตาราง</label>
                 <div class="color-picker" id="colorPicker">
-                    <!-- แถวที่ 1: สีเดิม -->
-                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div> <!-- เขียว -->
-                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div> <!-- เหลือง -->
-                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div> <!-- ฟ้า -->
-                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div> <!-- ม่วง -->
-                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div> <!-- ชมพู -->
-                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div> <!-- ส้ม -->
-                    
-                    <!-- แถวที่ 2: สีใหม่ที่เพิ่มเข้ามา -->
-                    <div class="color-circle" style="background-color: #e2e8f0;" data-color="#e2e8f0"></div> <!-- เทา -->
-                    <div class="color-circle" style="background-color: #fecaca;" data-color="#fecaca"></div> <!-- แดงพาสเทล -->
-                    <div class="color-circle" style="background-color: #99f6e4;" data-color="#99f6e4"></div> <!-- มิ้นต์ -->
-                    <div class="color-circle" style="background-color: #c7d2fe;" data-color="#c7d2fe"></div> <!-- คราม -->
-                    <div class="color-circle" style="background-color: #d9f99d;" data-color="#d9f99d"></div> <!-- มะนาว -->
-                    <div class="color-circle" style="background-color: #e6ccb2;" data-color="#e6ccb2"></div> <!-- น้ำตาลอ่อน -->
+                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div>
+                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div>
+                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div>
+                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div>
+                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div>
+                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div>
+                    <div class="color-circle" style="background-color: #e2e8f0;" data-color="#e2e8f0"></div>
+                    <div class="color-circle" style="background-color: #fecaca;" data-color="#fecaca"></div>
+                    <div class="color-circle" style="background-color: #99f6e4;" data-color="#99f6e4"></div>
+                    <div class="color-circle" style="background-color: #c7d2fe;" data-color="#c7d2fe"></div>
+                    <div class="color-circle" style="background-color: #d9f99d;" data-color="#d9f99d"></div>
+                    <div class="color-circle" style="background-color: #e6ccb2;" data-color="#e6ccb2"></div>
                 </div>
                 <input type="hidden" id="selectedColor" value="#a7f3d0">
             </div>
 
-            <!-- เพิ่มปุ่มทำสำเนาที่นี่ -->
             <div class="modal-actions">
                 <button class="btn-delete" id="deleteBtn" style="display:none;" onclick="deleteCourse()">ลบ</button>
                 <button class="btn-duplicate" id="duplicateBtn" style="display:none;" onclick="duplicateCourse()">ทำสำเนา</button>
@@ -771,6 +778,264 @@
                 pdf.save("timetable.pdf");
             });
         }
+                // ฟังก์ชันสร้างแถวกรอก วัน/เวลา/ห้องเรียน ใหม่
+        function addSlotRow(data = { day: 'MON', start: '09:00', end: '10:00', room: '' }) {
+            const container = document.getElementById('slotsContainer');
+            const slotId = Date.now() + Math.random();
+            
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'slot-item';
+            slotDiv.dataset.id = slotId;
+            
+            const count = container.children.length + 1;
+            
+            slotDiv.innerHTML = `
+                <div class="slot-header">
+                    <span>คาบเรียนที่ ${count}</span>
+                    ${container.children.length > 0 ? `<button type="button" class="btn-remove-slot" onclick="removeSlotRow(this)">&times;</button>` : ''}
+                </div>
+                <div class="row-2">
+                    <div class="form-group" style="margin-bottom:8px;">
+                        <label>วัน</label>
+                        <select class="slot-day">
+                            <option value="MON" ${data.day === 'MON' ? 'selected' : ''}>จันทร์ (MON)</option>
+                            <option value="TUE" ${data.day === 'TUE' ? 'selected' : ''}>อังคาร (TUE)</option>
+                            <option value="WED" ${data.day === 'WED' ? 'selected' : ''}>พุธ (WED)</option>
+                            <option value="THU" ${data.day === 'THU' ? 'selected' : ''}>พฤหัสบดี (THU)</option>
+                            <option value="FRI" ${data.day === 'FRI' ? 'selected' : ''}>ศุกร์ (FRI)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:8px;">
+                        <label>เวลาเรียน</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="time" class="slot-start" value="${data.start}" required>
+                            <span style="align-self:center;">-</span>
+                            <input type="time" class="slot-end" value="${data.end}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>ห้องเรียน</label>
+                    <input type="text" class="slot-room" value="${data.room || ''}" placeholder="เช่น MHMK M02">
+                </div>
+            `;
+            container.appendChild(slotDiv);
+        }
+
+        function removeSlotRow(btn) {
+            btn.closest('.slot-item').remove();
+            // อัปเดตหัวข้อคาบเรียนที่ 1, 2, 3 ใหม่
+            const items = document.querySelectorAll('.slot-item');
+            items.forEach((item, index) => {
+                item.querySelector('.slot-header span').innerText = `คาบเรียนที่ ${index + 1}`;
+            });
+        }
+
+        // ปรับปรุงฟังก์ชัน renderTimetable ให้วาดบล็อกตามทุก Slots ของวิชานั้นๆ
+        function renderTimetable() {
+            document.querySelectorAll('.subject-block').forEach(el => el.remove());
+
+            courses.forEach(course => {
+                // รองรับทั้งข้อมูลเดิม (Single Slot) และข้อมูลใหม่ (Multiple Slots)
+                const slots = course.slots && course.slots.length > 0 
+                    ? course.slots 
+                    : [{ day: course.day, start: course.start, end: course.end, room: course.room }];
+
+                slots.forEach((slot, slotIndex) => {
+                    if (!slot.day || !slot.start || !slot.end) return;
+
+                    const startHour = parseInt(slot.start.split(':')[0]);
+                    const startMin = parseInt(slot.start.split(':')[1]) / 60;
+                    const endHour = parseInt(slot.end.split(':')[0]);
+                    const endMin = parseInt(slot.end.split(':')[1]) / 60;
+
+                    const colStart = (startHour - 8) + 2 + startMin;
+                    const colEnd = (endHour - 8) + 2 + endMin;
+                    const row = dayMap[slot.day];
+
+                    const block = document.createElement('div');
+                    block.className = 'subject-block';
+                    block.style.backgroundColor = course.color;
+                    block.style.gridColumn = `${colStart} / ${colEnd}`;
+                    block.style.gridRow = `${row} / ${row + 1}`;
+                    block.style.top = "2px"; block.style.bottom = "2px"; block.style.left = "2px"; block.style.right = "2px";
+
+                    block.innerHTML = `
+                        <div class="subj-code">${course.code} ${course.name}</div>
+                        <div class="subj-details">${slot.room || ''}<br>Sec ${course.sec || ''}</div>
+                    `;
+
+                    block.draggable = true;
+                    
+                    // ส่งข้อมูล course.id และ slotIndex ไปตอนลาก
+                    block.ondragstart = (e) => {
+                        e.dataTransfer.setData("text/plain", JSON.stringify({ courseId: course.id, slotIndex: slotIndex }));
+                        setTimeout(() => block.style.opacity = '0.5', 0);
+                    };
+
+                    block.ondragend = () => block.style.opacity = '1';
+                    block.onclick = () => openModal(course.id);
+
+                    timetableEl.appendChild(block);
+                });
+            });
+        }
+
+        // อัปเดตการเปิด Modal
+        function openModal(id = null) {
+            modal.style.display = 'flex';
+            const deleteBtn = document.getElementById('deleteBtn');
+            const duplicateBtn = document.getElementById('duplicateBtn');
+            const container = document.getElementById('slotsContainer');
+            container.innerHTML = ''; // เคลียร์รายการเก่าก่อน
+
+            if (id) {
+                const course = courses.find(c => c.id === id);
+                document.getElementById('modalTitle').innerText = course.code + " " + course.name;
+                document.getElementById('editId').value = course.id;
+                document.getElementById('courseCode').value = course.code;
+                document.getElementById('courseName').value = course.name;
+                document.getElementById('sec').value = course.sec;
+                document.getElementById('instructor').value = course.instructor || '';
+
+                // โหลดรายการ Slots
+                const slots = course.slots && course.slots.length > 0 
+                    ? course.slots 
+                    : [{ day: course.day, start: course.start, end: course.end, room: course.room }];
+                
+                slots.forEach(slot => addSlotRow(slot));
+
+                document.getElementById('selectedColor').value = course.color;
+                colorCircles.forEach(c => {
+                    c.classList.remove('selected');
+                    if(c.getAttribute('data-color') === course.color) c.classList.add('selected');
+                });
+
+                deleteBtn.style.display = 'block';
+                duplicateBtn.style.display = 'block';
+            } else {
+                document.getElementById('modalTitle').innerText = 'เพิ่มรายวิชา';
+                document.getElementById('editId').value = '';
+                document.getElementById('courseCode').value = '';
+                document.getElementById('courseName').value = '';
+                document.getElementById('sec').value = '';
+                document.getElementById('instructor').value = '';
+                
+                // เพิ่ม 1 คาบเรียนเริ่มต้นไว้ให้
+                addSlotRow();
+
+                deleteBtn.style.display = 'none';
+                duplicateBtn.style.display = 'none';
+            }
+        }
+
+        // อัปเดตการบันทึกวิชา
+        function saveCourse() {
+            const id = document.getElementById('editId').value;
+            
+            // ดึงข้อมูล Slots ทั้งหมดใน Modal
+            const slotElements = document.querySelectorAll('.slot-item');
+            const slots = [];
+            slotElements.forEach(item => {
+                slots.push({
+                    day: item.querySelector('.slot-day').value,
+                    start: item.querySelector('.slot-start').value,
+                    end: item.querySelector('.slot-end').value,
+                    room: item.querySelector('.slot-room').value
+                });
+            });
+
+            const newCourse = {
+                id: id ? parseInt(id) : Date.now(),
+                code: document.getElementById('courseCode').value,
+                name: document.getElementById('courseName').value,
+                sec: document.getElementById('sec').value,
+                instructor: document.getElementById('instructor').value,
+                color: document.getElementById('selectedColor').value,
+                slots: slots // บันทึกเป็น Array ของวัน/เวลาเรียน
+            };
+
+            if(!newCourse.code || slots.length === 0) {
+                alert("กรุณากรอกรหัสวิชาและระบุวัน/เวลาเรียนอย่างน้อย 1 คาบ");
+                return;
+            }
+
+            if (id) {
+                courses = courses.map(c => c.id === parseInt(id) ? newCourse : c);
+            } else {
+                courses.push(newCourse);
+            }
+
+            closeModal();
+            renderTimetable();
+            
+            if(typeof window.saveDataToFirestore === 'function') {
+                window.saveDataToFirestore();
+            }
+        }
+
+        // อัปเดตการ Drag & Drop สำหรับย้ายเฉพาะคาบนั้นๆ
+        timetableEl.ondrop = (e) => {
+            e.preventDefault();
+            const rawData = e.dataTransfer.getData("text/plain");
+            if(!rawData) return;
+            
+            try {
+                const { courseId, slotIndex } = JSON.parse(rawData);
+                const rect = timetableEl.getBoundingClientRect();
+                const x = e.clientX - rect.left - 100;
+                const y = e.clientY - rect.top - 50;
+                
+                if (x < 0 || y < 0) return;
+
+                const colWidth = (rect.width - 100) / 10;
+                const rowHeight = 100;
+
+                const colIndex = Math.floor(x / colWidth);
+                const rowIndex = Math.floor(y / rowHeight);
+
+                if (colIndex >= 0 && colIndex < 10 && rowIndex >= 0 && rowIndex < 5) {
+                    const newDay = daysList[rowIndex];
+                    const course = courses.find(c => c.id === parseInt(courseId));
+                    
+                    if(course) {
+                        const slots = course.slots || [{ day: course.day, start: course.start, end: course.end, room: course.room }];
+                        const targetSlot = slots[slotIndex];
+                        
+                        if (targetSlot) {
+                            const startH = parseInt(targetSlot.start.split(':')[0]);
+                            const startM = parseInt(targetSlot.start.split(':')[1]);
+                            const endH = parseInt(targetSlot.end.split(':')[0]);
+                            const endM = parseInt(targetSlot.end.split(':')[1]);
+                            const durationH = endH - startH;
+                            const durationM = endM - startM;
+                            
+                            const newStartH = 8 + colIndex;
+                            let newEndH = newStartH + durationH;
+                            let newEndM = startM + durationM;
+                            if(newEndM >= 60) {
+                                newEndH += Math.floor(newEndM / 60);
+                                newEndM = newEndM % 60;
+                            }
+
+                            const pad = (n) => n.toString().padStart(2, '0');
+                            targetSlot.day = newDay;
+                            targetSlot.start = `${pad(newStartH)}:${pad(startM)}`;
+                            targetSlot.end = `${pad(newEndH)}:${pad(newEndM)}`;
+                            
+                            course.slots = slots;
+                            
+                            renderTimetable();
+                            if(typeof window.saveDataToFirestore === 'function') {
+                                window.saveDataToFirestore();
+                            }
+                        }
+                    }
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        };
 
         renderTimetable();
     </script>
