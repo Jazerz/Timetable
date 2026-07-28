@@ -120,7 +120,13 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
-        .subj-code { font-weight: 700; margin-bottom: 2px; }
+        .subj-code { 
+            font-weight: 700; 
+            margin-bottom: 2px; 
+            white-space: normal; /* อนุญาตให้ข้อความขึ้นบรรทัดใหม่ได้ */
+            word-break: break-word; /* ตัดคำอัตโนมัติไม่ให้ทะลุขอบกล่อง */
+            line-height: 1.2; /* ปรับความห่างระหว่างบรรทัดให้พอดี */
+        }
         
         .subj-details { 
             color: rgba(0,0,0,0.6); 
@@ -502,7 +508,7 @@
 
                 // จัด Sec ให้อยู่บรรทัดล่างด้วย <br>
                 block.innerHTML = `
-                    <div class="subj-code">${course.code} ${course.name.substring(0,12)}${course.name.length>12?'...':''}</div>
+                    <div class="subj-code">${course.code} ${course.name}</div>
                     <div class="subj-details">${course.room}<br>Sec ${course.sec}</div>
                 `;
 
