@@ -223,7 +223,32 @@
     </style>
 </head>
 <body>
+    <!-- แถบแสดงสถานะผู้ใช้ -->
+<div id="authContainer" style="text-align: right; margin-bottom: 10px; font-size: 14px;">
+    <span id="userStatus">คุณยังไม่ได้เข้าสู่ระบบ</span>
+    <button id="loginBtn" onclick="openLoginModal()" style="padding: 5px 15px; border-radius: 5px; cursor: pointer;">เข้าสู่ระบบ / สมัครสมาชิก</button>
+    <button id="logoutBtn" style="display:none; padding: 5px 15px; border-radius: 5px; cursor: pointer; background: #e53e3e; color: white; border: none;">ออกจากระบบ</button>
+</div>
 
+<!-- Modal สำหรับ Login / Register -->
+<div id="loginModal" class="modal">
+    <div class="modal-content" style="max-width: 350px;">
+        <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+        <h2>เข้าสู่ระบบ</h2>
+        <div class="form-group">
+            <label>อีเมล</label>
+            <input type="email" id="emailInput" placeholder="example@email.com">
+        </div>
+        <div class="form-group">
+            <label>รหัสผ่าน</label>
+            <input type="password" id="passwordInput" placeholder="********">
+        </div>
+        <div class="modal-actions" style="flex-direction: column;">
+            <button class="btn-save" id="signInBtn" style="width: 100%; margin-bottom: 10px;">เข้าสู่ระบบ</button>
+            <button class="btn-export" id="signUpBtn" style="width: 100%;">สมัครสมาชิกใหม่</button>
+        </div>
+    </div>
+</div>
     <div class="header-container">
         <h1>จัดตารางเรียน</h1>
         <div class="action-buttons">
@@ -565,6 +590,9 @@
 
             closeModal();
             renderTimetable();
+            if(typeof window.saveDataToFirestore === 'function') {
+                window.saveDataToFirestore();
+            }
         }
 
         function deleteCourse() {
@@ -618,4 +646,115 @@
         renderTimetable();
     </script>
 </body>
+<!-- ========================================== -->
+    <!-- นำโค้ดนี้ไปวางไว้ล่างสุด ก่อนแท็ก </body> -->
+    <!-- ========================================== -->
+    <script type="module">
+        // 1. นำเข้า Firebase SDK ตามเวอร์ชันของคุณ (12.16.0) และเพิ่ม Auth กับ Firestore
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+        // 2. Config ของคุณ
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY9pGNQbxR9PfFeAnXqV-jWRW8ZQFgDq8",
+            authDomain: "timtable-86a7d.firebaseapp.com",
+            projectId: "timtable-86a7d",
+            storageBucket: "timtable-86a7d.firebasestorage.app",
+            messagingSenderId: "664154164655",
+            appId: "1:664154164655:web:4a5f411debd276d1e0b35a",
+            measurementId: "G-GTY6VWH2DZ"
+        };
+
+        // 3. เริ่มต้นระบบ Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // 4. ระบบเช็คสถานะการเข้าสู่ระบบ
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userStatus').innerText = `เข้าสู่ระบบ: ${user.email}`;
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                
+                // ดึงข้อมูลตารางเรียนจาก Database
+                await loadDataFromFirestore();
+            } else {
+                currentUser = null;
+                document.getElementById('userStatus').innerText = `คุณยังไม่ได้เข้าสู่ระบบ (ข้อมูลจะไม่ถูกบันทึก)`;
+                document.getElementById('loginBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+                
+                // ล้างตารางเมื่อออกจากระบบ
+                window.courses = [];
+                window.renderTimetable();
+            }
+        });
+
+        // 5. ดึงข้อมูลจากฐานข้อมูล
+        async function loadDataFromFirestore() {
+            if (!currentUser) return;
+            try {
+                const docRef = doc(db, "schedules", currentUser.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    window.courses = docSnap.data().courses || [];
+                } else {
+                    window.courses = []; 
+                }
+                window.renderTimetable();
+            } catch (error) {
+                console.error("Error fetching document:", error);
+            }
+        }
+
+        // 6. บันทึกข้อมูลขึ้นฐานข้อมูล
+        window.saveDataToFirestore = async function() {
+            if (!currentUser) return; // ถ้าไม่ได้ล็อกอิน ไม่ต้องเซฟขึ้น Cloud
+            
+            try {
+                await setDoc(doc(db, "schedules", currentUser.uid), {
+                    courses: window.courses
+                });
+                console.log("บันทึกข้อมูลขึ้น Cloud สำเร็จ!");
+            } catch (error) {
+                console.error("Error writing document: ", error);
+            }
+        }
+
+        // 7. จัดการปุ่ม UI ต่างๆ สำหรับ Login / Register
+        window.openLoginModal = () => document.getElementById('loginModal').style.display = 'flex';
+        window.closeLoginModal = () => document.getElementById('loginModal').style.display = 'none';
+
+        document.getElementById('signInBtn').addEventListener('click', () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passwordInput').value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => {
+                    closeLoginModal();
+                    alert("เข้าสู่ระบบสำเร็จ!");
+                })
+                .catch(error => alert("เข้าสู่ระบบล้มเหลว: รหัสผ่านผิด หรือไม่มีอีเมลนี้"));
+        });
+
+        document.getElementById('signUpBtn').addEventListener('click', () => {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passwordInput').value;
+            createUserWithEmailAndPassword(auth, email, pass)
+                .then(() => {
+                    closeLoginModal();
+                    alert("สมัครสมาชิกสำเร็จ!");
+                })
+                .catch(error => alert("สมัครสมาชิกล้มเหลว: รหัสผ่านต้อง 6 ตัวขึ้นไป หรืออีเมลซ้ำ"));
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+    </script>
 </html>
