@@ -373,16 +373,7 @@
 
     <script>
         // ฐานข้อมูล
-        let courses = [
-            {
-                id: 1, code: "2303108", name: "GEN BIOL LAB", sec: "3", instructor: "STAFF",
-                day: "TUE", start: "09:00", end: "12:00", room: "MHMK 401", midterm: "", final: "", color: "#a7f3d0"
-            },
-            {
-                id: 2, code: "2301173", name: "PROGRAMMING", sec: "1", instructor: "STAFF",
-                day: "THU", start: "09:00", end: "12:00", room: "SCI05 402", midterm: "", final: "", color: "#bfdbfe"
-            }
-        ];
+        var courses = []; // เปลี่ยนจาก let เป็น var เพื่อให้ Firebase มองเห็นและอัปเดตข้อมูลได้ และตั้งเป็นค่าว่างไว้ก่อน
 
         const dayMap = { "MON": 2, "TUE": 3, "WED": 4, "THU": 5, "FRI": 6 };
         const daysList = ["MON", "TUE", "WED", "THU", "FRI"];
