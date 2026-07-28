@@ -185,6 +185,7 @@
 
         .color-picker {
             display: flex;
+            flex-wrap: wrap; /* เพิ่มคำสั่งนี้เพื่อให้สีปัดบรรทัดใหม่ได้ */
             gap: 10px;
             margin-top: 10px;
         }
@@ -457,12 +458,21 @@
             <div class="form-group">
                 <label>เลือกสีในตาราง</label>
                 <div class="color-picker" id="colorPicker">
-                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div>
-                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div>
-                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div>
-                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div>
-                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div>
-                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div>
+                    <!-- แถวที่ 1: สีเดิม -->
+                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div> <!-- เขียว -->
+                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div> <!-- เหลือง -->
+                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div> <!-- ฟ้า -->
+                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div> <!-- ม่วง -->
+                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div> <!-- ชมพู -->
+                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div> <!-- ส้ม -->
+                    
+                    <!-- แถวที่ 2: สีใหม่ที่เพิ่มเข้ามา -->
+                    <div class="color-circle" style="background-color: #e2e8f0;" data-color="#e2e8f0"></div> <!-- เทา -->
+                    <div class="color-circle" style="background-color: #fecaca;" data-color="#fecaca"></div> <!-- แดงพาสเทล -->
+                    <div class="color-circle" style="background-color: #99f6e4;" data-color="#99f6e4"></div> <!-- มิ้นต์ -->
+                    <div class="color-circle" style="background-color: #c7d2fe;" data-color="#c7d2fe"></div> <!-- คราม -->
+                    <div class="color-circle" style="background-color: #d9f99d;" data-color="#d9f99d"></div> <!-- มะนาว -->
+                    <div class="color-circle" style="background-color: #e6ccb2;" data-color="#e6ccb2"></div> <!-- น้ำตาลอ่อน -->
                 </div>
                 <input type="hidden" id="selectedColor" value="#a7f3d0">
             </div>
