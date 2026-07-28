@@ -152,6 +152,28 @@
             width: 90%;
             max-width: 500px;
             position: relative;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            flex-shrink: 0;
+            margin-bottom: 12px;
+        }
+
+        .modal-body {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .modal-footer {
+            flex-shrink: 0;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
         }
 
         .close-btn {
@@ -208,7 +230,7 @@
         .modal-actions {
             display: flex;
             gap: 10px;
-            margin-top: 25px;
+            margin-top: 0;
         }
 
         .modal-actions button {
@@ -431,64 +453,71 @@
     <div id="courseModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">เพิ่มรายวิชา</h2>
-            
-            <input type="hidden" id="editId">
-            
-            <div class="row-2">
-                <div class="form-group">
-                    <label>รหัสวิชา</label>
-                    <input type="text" id="courseCode" placeholder="เช่น 2303107" required>
+
+            <div class="modal-header">
+                <h2 id="modalTitle">เพิ่มรายวิชา</h2>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                
+                <div class="row-2">
+                    <div class="form-group">
+                        <label>รหัสวิชา</label>
+                        <input type="text" id="courseCode" placeholder="เช่น 2303107" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ชื่อวิชา</label>
+                        <input type="text" id="courseName" placeholder="เช่น GEN BIOLOGY" required>
+                    </div>
                 </div>
+
+                <div class="row-2">
+                    <div class="form-group">
+                        <label>Section</label>
+                        <input type="text" id="sec" placeholder="เช่น 2">
+                    </div>
+                    <div class="form-group">
+                        <label>ผู้สอน</label>
+                        <input type="text" id="instructor" placeholder="เช่น STAFF">
+                    </div>
+                </div>
+
+                <!-- รายการวัน/เวลา/ห้องเรียน (Dynamic Slots) -->
+                <label style="font-weight:600; font-size:14px; color:var(--text-light); margin-bottom:6px; display:block;">วัน เวลา และห้องเรียน</label>
+                <div id="slotsContainer" class="slots-container">
+                    <!-- รายการวันเรียนจะถูกสร้างผ่าน JavaScript บริเวณนี้ -->
+                </div>
+
+                <!-- ปุ่มสำหรับเพิ่มวันเรียนใหม่ -->
+                <button type="button" class="btn-add-slot" onclick="addSlotRow()">+ เพิ่มวัน/เวลาเรียน</button>
+
                 <div class="form-group">
-                    <label>ชื่อวิชา</label>
-                    <input type="text" id="courseName" placeholder="เช่น GEN BIOLOGY" required>
+                    <label>เลือกสีในตาราง</label>
+                    <div class="color-picker" id="colorPicker">
+                        <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div>
+                        <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div>
+                        <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div>
+                        <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div>
+                        <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div>
+                        <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div>
+                        <div class="color-circle" style="background-color: #e2e8f0;" data-color="#e2e8f0"></div>
+                        <div class="color-circle" style="background-color: #fecaca;" data-color="#fecaca"></div>
+                        <div class="color-circle" style="background-color: #99f6e4;" data-color="#99f6e4"></div>
+                        <div class="color-circle" style="background-color: #c7d2fe;" data-color="#c7d2fe"></div>
+                        <div class="color-circle" style="background-color: #d9f99d;" data-color="#d9f99d"></div>
+                        <div class="color-circle" style="background-color: #e6ccb2;" data-color="#e6ccb2"></div>
+                    </div>
+                    <input type="hidden" id="selectedColor" value="#a7f3d0">
                 </div>
             </div>
 
-            <div class="row-2">
-                <div class="form-group">
-                    <label>Section</label>
-                    <input type="text" id="sec" placeholder="เช่น 2">
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button class="btn-delete" id="deleteBtn" style="display:none;" onclick="deleteCourse()">ลบ</button>
+                    <button class="btn-duplicate" id="duplicateBtn" style="display:none;" onclick="duplicateCourse()">ทำสำเนา</button>
+                    <button class="btn-save" onclick="saveCourse()" id="saveBtnFull">บันทึกวิชา</button>
                 </div>
-                <div class="form-group">
-                    <label>ผู้สอน</label>
-                    <input type="text" id="instructor" placeholder="เช่น STAFF">
-                </div>
-            </div>
-
-            <!-- รายการวัน/เวลา/ห้องเรียน (Dynamic Slots) -->
-            <label style="font-weight:600; font-size:14px; color:var(--text-light); margin-bottom:6px; display:block;">วัน เวลา และห้องเรียน</label>
-            <div id="slotsContainer" class="slots-container">
-                <!-- รายการวันเรียนจะถูกสร้างผ่าน JavaScript บริเวณนี้ -->
-            </div>
-
-            <!-- ปุ่มสำหรับเพิ่มวันเรียนใหม่ -->
-            <button type="button" class="btn-add-slot" onclick="addSlotRow()">+ เพิ่มวัน/เวลาเรียน</button>
-
-            <div class="form-group">
-                <label>เลือกสีในตาราง</label>
-                <div class="color-picker" id="colorPicker">
-                    <div class="color-circle selected" style="background-color: #a7f3d0;" data-color="#a7f3d0"></div>
-                    <div class="color-circle" style="background-color: #fde68a;" data-color="#fde68a"></div>
-                    <div class="color-circle" style="background-color: #bfdbfe;" data-color="#bfdbfe"></div>
-                    <div class="color-circle" style="background-color: #ddd6fe;" data-color="#ddd6fe"></div>
-                    <div class="color-circle" style="background-color: #fbcfe8;" data-color="#fbcfe8"></div>
-                    <div class="color-circle" style="background-color: #fed7aa;" data-color="#fed7aa"></div>
-                    <div class="color-circle" style="background-color: #e2e8f0;" data-color="#e2e8f0"></div>
-                    <div class="color-circle" style="background-color: #fecaca;" data-color="#fecaca"></div>
-                    <div class="color-circle" style="background-color: #99f6e4;" data-color="#99f6e4"></div>
-                    <div class="color-circle" style="background-color: #c7d2fe;" data-color="#c7d2fe"></div>
-                    <div class="color-circle" style="background-color: #d9f99d;" data-color="#d9f99d"></div>
-                    <div class="color-circle" style="background-color: #e6ccb2;" data-color="#e6ccb2"></div>
-                </div>
-                <input type="hidden" id="selectedColor" value="#a7f3d0">
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn-delete" id="deleteBtn" style="display:none;" onclick="deleteCourse()">ลบ</button>
-                <button class="btn-duplicate" id="duplicateBtn" style="display:none;" onclick="duplicateCourse()">ทำสำเนา</button>
-                <button class="btn-save" onclick="saveCourse()" id="saveBtnFull">บันทึกวิชา</button>
             </div>
         </div>
     </div>
